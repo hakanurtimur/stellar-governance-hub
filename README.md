@@ -12,7 +12,7 @@ Current Level 3 public deployment fields:
 - Reputation Contract ID: `CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO`
 - Governance interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
 - Reputation interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
-- Live Demo: TODO
+- Live Demo: https://stellar-governance-hub.vercel.app/
 - Demo Video: TODO
 
 Explorer links:
@@ -20,6 +20,18 @@ Explorer links:
 - Governance Contract: https://lab.stellar.org/r/testnet/contract/CAN4N5DMMJOO5TBVB73AW57F4EEUQZXT2U4BJXAHAN7MKBMLSOYLTNP2
 - Reputation Contract: https://lab.stellar.org/r/testnet/contract/CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO
 - Vote and reputation reward transaction: https://stellar.expert/explorer/testnet/tx/9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4
+
+## Live Demo
+
+Live Demo: https://stellar-governance-hub.vercel.app/
+
+The live deployment should be configured with the public Testnet contract IDs listed in this README. If the Vercel deployment is rebuilt, verify the environment variables below are present before recording screenshots or the demo video.
+
+## Demo Video
+
+Demo Video: TODO
+
+The demo video link will be added after the final recording is uploaded. Do not use placeholder or private links as submission evidence.
 
 Deployment transactions:
 
@@ -203,6 +215,17 @@ stellar contract build
 
 CI screenshot for submission should be captured from the GitHub Actions run page. Test output screenshot can be captured from the local terminal or GitHub Actions logs.
 
+## Test Output
+
+Required verification before final submission:
+
+- `pnpm test` for frontend and helper unit tests.
+- `pnpm lint` for the Next.js frontend.
+- `pnpm build` for production build validation.
+- `cargo test --locked` and `stellar contract build` in both `contracts/governance` and `contracts/reputation`.
+
+Capture `screenshots/test-output.png` from a local terminal or GitHub Actions logs after these checks pass.
+
 ## Testing Plan
 
 Contract tests:
@@ -242,6 +265,17 @@ NEXT_PUBLIC_CONTRACT_ID=
 
 Do not commit `.env.local`, private keys, seed phrases, or deployer secrets.
 
+## Vercel Environment Variables
+
+Set these in the Vercel project before deploying or redeploying:
+
+```bash
+NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=CAN4N5DMMJOO5TBVB73AW57F4EEUQZXT2U4BJXAHAN7MKBMLSOYLTNP2
+NEXT_PUBLIC_REPUTATION_CONTRACT_ID=CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO
+NEXT_PUBLIC_STELLAR_NETWORK=testnet
+NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+```
+
 ## Local Development
 
 ```bash
@@ -255,9 +289,9 @@ Open `http://localhost:3000`.
 Useful checks:
 
 ```bash
-npm test
-npm run lint
-npm run build
+pnpm test
+pnpm lint
+pnpm build
 ```
 
 ## Contract Build / Deploy Workflow
@@ -289,6 +323,8 @@ Level 3 screenshots: TODO
 
 Do not reuse Level 2 screenshots as Level 3 evidence. New screenshots should be captured after the governance dashboard and real Testnet flows are ready.
 
+Add real screenshots before submission. The existing legacy screenshots are baseline artifacts and should not be used as final Level 3 proof unless recaptured from the live Governance Hub flow.
+
 Required screenshot paths:
 
 - `screenshots/mobile-responsive.png`
@@ -305,6 +341,21 @@ Required screenshot paths:
 Demo video: TODO
 
 The demo should show wallet connection, proposal voting, transaction status, activity feed update, and reputation point update using real Testnet data.
+
+## Demo Video Script
+
+Target length: 1-2 minutes.
+
+1. Open https://stellar-governance-hub.vercel.app/ and show the Stellar Governance Hub dashboard.
+2. Show the Governance and Reputation contract ID cards.
+3. Connect a Stellar Testnet wallet.
+4. Load the live proposals and open proposal detail.
+5. Select a vote option and submit the vote.
+6. Confirm the transaction in the wallet.
+7. Show the transaction hash and Stellar Expert explorer link.
+8. Show the reputation points and `participant` level.
+9. Show the live activity feed entry for the vote.
+10. Briefly show GitHub Actions CI and local/GitHub test output.
 
 ## Submission Checklist
 
@@ -323,5 +374,6 @@ The demo should show wallet connection, proposal voting, transaction status, act
 - [x] Contract deployment workflow verified.
 - [x] Contracts deployed to Stellar Testnet.
 - [x] README updated with real Level 3 contract IDs and transaction hashes.
+- [x] Live demo URL added.
 - [ ] Level 3 screenshots captured.
 - [ ] Demo video recorded.

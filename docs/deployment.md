@@ -132,7 +132,7 @@ stellar contract invoke \
 - Proposal 1 transaction: `65bf8a12e3eb6ec90b08de6fd63d4df600bf2a5e47194fc426922a86e3cae410`
 - Proposal 2 transaction: `686f555552aff5e13809a9c7b791554afcc7497be1ab64f0740d02f74849c531`
 - Vote and reputation reward transaction: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
-- Frontend deployment URL: TODO
+- Frontend deployment URL: https://stellar-governance-hub.vercel.app/
 - Demo video URL: TODO
 
 Explorer links:
