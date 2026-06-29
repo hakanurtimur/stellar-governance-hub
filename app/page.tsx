@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { ContractCard } from "@/components/ContractCard";
-import { PollCard } from "@/components/PollCard";
+import { ProposalCard } from "@/components/ProposalCard";
 import { TransactionStatus } from "@/components/TransactionStatus";
 import { WalletConnect } from "@/components/WalletConnect";
 import { WalletPanel } from "@/components/WalletPanel";
@@ -17,6 +17,7 @@ import {
   type VoteActivity,
 } from "@/lib/contract";
 import { formatErrorMessage } from "@/lib/format";
+import type { ProposalState } from "@/lib/governance";
 import {
   initialTransactionState,
   recordFailedTransaction,
@@ -131,6 +132,25 @@ export default function Home() {
     return syncing ? "Listening for contract events" : "Polling contract state";
   }, [poll?.configured, syncing]);
 
+  const activeProposal: ProposalState | undefined = useMemo(() => {
+    if (!poll) {
+      return undefined;
+    }
+
+    return {
+      configured: poll.configured,
+      id: 1,
+      title: poll.question,
+      description:
+        "Governance baseline proposal. Upcoming contract stages will replace this with live proposal metadata from the Governance contract.",
+      options: poll.options,
+      totalVotes: poll.totalVotes,
+      hasVoted: poll.hasVoted,
+      open: true,
+      latestLedger: poll.latestLedger,
+    };
+  }, [poll]);
+
   async function handleConnect() {
     try {
       setError(undefined);
@@ -208,7 +228,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold">Stellar Live Poll</h1>
+              <h1 className="text-2xl font-semibold">Stellar Governance Hub</h1>
               <span className="rounded-md bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-700">
                 Testnet
               </span>
@@ -218,7 +238,7 @@ export default function Home() {
               </span>
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Multi-wallet Soroban poll with contract reads, writes, transaction tracking, and synced activity.
+              Multi-wallet governance dashboard with proposal voting, transaction tracking, and synced activity.
             </p>
           </div>
           <WalletConnect
@@ -245,9 +265,9 @@ export default function Home() {
             </div>
           ) : null}
 
-          {poll ? (
-            <PollCard
-              poll={poll}
+          {activeProposal ? (
+            <ProposalCard
+              proposal={activeProposal}
               selectedOption={selectedOption}
               walletConnected={Boolean(publicKey)}
               voting={
@@ -260,7 +280,7 @@ export default function Home() {
             />
           ) : (
             <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              Loading poll state from Stellar RPC...
+              Loading governance state from Stellar RPC...
             </div>
           )}
         </div>
@@ -300,7 +320,7 @@ export default function Home() {
       </div>
 
       <footer className="border-t border-slate-200 bg-white px-5 py-4 text-center text-sm text-slate-500">
-        Built for Stellar Level 2 · Soroban Testnet · Smart Contract Poll
+        Built for Stellar Level 3 · Soroban Testnet · Governance and Reputation
       </footer>
     </main>
   );
