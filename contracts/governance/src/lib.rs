@@ -48,6 +48,13 @@ pub struct VoteCastEvent {
     pub option_index: u32,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProposalClosedEvent {
+    pub proposal_id: u32,
+    pub closed_by: Address,
+}
+
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
@@ -59,6 +66,7 @@ pub enum GovernanceError {
     InvalidOption = 5,
     AlreadyVoted = 6,
     ProposalClosed = 7,
+    Unauthorized = 8,
 }
 
 #[contractimpl]
@@ -245,6 +253,34 @@ impl GovernanceContract {
             .has(&DataKey::Voted(proposal_id, voter))
     }
 
+    pub fn close_proposal(
+        env: Env,
+        caller: Address,
+        proposal_id: u32,
+    ) -> Result<(), GovernanceError> {
+        caller.require_auth();
+
+        let mut proposal = Self::get_proposal(env.clone(), proposal_id)?;
+        let admin: Option<Address> = env.storage().persistent().get(&DataKey::Admin);
+        if proposal.creator != caller && admin.as_ref() != Some(&caller) {
+            return Err(GovernanceError::Unauthorized);
+        }
+
+        proposal.open = false;
+        env.storage()
+            .persistent()
+            .set(&DataKey::Proposal(proposal_id), &proposal);
+        env.events().publish(
+            (symbol_short!("closed"), proposal_id),
+            ProposalClosedEvent {
+                proposal_id,
+                closed_by: caller,
+            },
+        );
+
+        Ok(())
+    }
+
     fn proposal_ids(env: &Env) -> Vec<u32> {
         env.storage()
             .persistent()
@@ -323,5 +359,74 @@ mod test {
         assert_eq!(governance.get_results(&proposal_id), vec![&env, 1_u32, 0_u32]);
         assert!(governance.has_voted(&proposal_id, &voter));
         assert_eq!(reputation.get_points(&voter), 1);
+    }
+
+    #[test]
+    fn duplicate_vote_is_rejected_without_extra_reputation() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let governance_id = env.register(GovernanceContract, ());
+        let reputation_id = env.register(ReputationContract, ());
+        let governance = GovernanceContractClient::new(&env, &governance_id);
+        let reputation = ReputationContractClient::new(&env, &reputation_id);
+        let admin = Address::generate(&env);
+        let creator = Address::generate(&env);
+        let voter = Address::generate(&env);
+
+        reputation.initialize(&admin, &governance_id);
+        governance.initialize(&admin, &reputation_id);
+        let proposal_id = governance.create_proposal(
+            &creator,
+            &String::from_str(&env, "Ship governance hub?"),
+            &String::from_str(&env, "Promote the advanced governance dApp."),
+            &vec![
+                &env,
+                String::from_str(&env, "Approve"),
+                String::from_str(&env, "Reject"),
+            ],
+            &1_000_u64,
+        );
+
+        governance.vote(&voter, &proposal_id, &0_u32);
+
+        assert_eq!(
+            governance.try_vote(&voter, &proposal_id, &1_u32),
+            Err(Ok(GovernanceError::AlreadyVoted))
+        );
+        assert_eq!(governance.get_results(&proposal_id), vec![&env, 1_u32, 0_u32]);
+        assert_eq!(reputation.get_points(&voter), 1);
+    }
+
+    #[test]
+    fn close_proposal_blocks_later_votes() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let governance_id = env.register(GovernanceContract, ());
+        let governance = GovernanceContractClient::new(&env, &governance_id);
+        let admin = Address::generate(&env);
+        let creator = Address::generate(&env);
+        let voter = Address::generate(&env);
+        let reputation_id = Address::generate(&env);
+
+        governance.initialize(&admin, &reputation_id);
+        let proposal_id = governance.create_proposal(
+            &creator,
+            &String::from_str(&env, "Close after review?"),
+            &String::from_str(&env, "Stop accepting votes after governance review."),
+            &vec![
+                &env,
+                String::from_str(&env, "Yes"),
+                String::from_str(&env, "No"),
+            ],
+            &1_000_u64,
+        );
+
+        governance.close_proposal(&creator, &proposal_id);
+
+        assert_eq!(governance.get_proposal(&proposal_id).open, false);
+        assert_eq!(
+            governance.try_vote(&voter, &proposal_id, &0_u32),
+            Err(Ok(GovernanceError::ProposalClosed))
+        );
     }
 }
