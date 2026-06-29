@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  contracts:
+    name: Contracts
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Test governance contract
+        working-directory: contracts/governance
+        run: cargo test --locked
+
+      - name: Test reputation contract
+        working-directory: contracts/reputation
+        run: cargo test --locked
+
+      - name: Build governance contract if Stellar CLI is available
+        working-directory: contracts/governance
+        run: |
+          if command -v stellar >/dev/null 2>&1; then
+            stellar contract build
+          else
+            echo "Stellar CLI is not installed in CI; skipping stellar contract build."
+          fi
+
+      - name: Build reputation contract if Stellar CLI is available
+        working-directory: contracts/reputation
+        run: |
+          if command -v stellar >/dev/null 2>&1; then
+            stellar contract build
+          else
+            echo "Stellar CLI is not installed in CI; skipping stellar contract build."
+          fi
