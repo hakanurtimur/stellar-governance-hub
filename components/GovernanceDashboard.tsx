@@ -1,13 +1,19 @@
 "use client";
 
 import { AlertTriangle, RefreshCcw } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { createLocalVoteActivity } from "../lib/activity";
-import { submitVote } from "../lib/contract";
+import { getContractMode } from "../lib/contract-client";
 import { getContractConfig } from "../lib/env";
-import { formatErrorMessage } from "../lib/format";
-import { governancePreviewProposals, type ProposalState } from "../lib/governance";
+import { formatContractError } from "../lib/errors";
+import {
+  governancePreviewProposals,
+  loadGovernanceProposals,
+  voteOnProposal,
+  type ProposalState,
+} from "../lib/governance";
+import { getReputationProfile, type ReputationProfile } from "../lib/reputation";
 import {
   initialTransactionState,
   recordFailedTransaction,
@@ -20,7 +26,6 @@ import {
   assertWalletTestnet,
   connectWallet,
   disconnectWallet,
-  signTransactionXdr,
   switchWallet,
 } from "../lib/wallet";
 import { ActivityFeed } from "./ActivityFeed";
@@ -33,9 +38,10 @@ import { VotePanel } from "./VotePanel";
 import { WalletPanel } from "./WalletPanel";
 
 export function GovernanceDashboard() {
-  const config = getContractConfig();
+  const config = useMemo(() => getContractConfig(), []);
+  const mode = getContractMode(config);
   const [publicKey, setPublicKey] = useState<string>();
-  const [proposals] = useState<ProposalState[]>(() => governancePreviewProposals());
+  const [proposals, setProposals] = useState<ProposalState[]>(() => governancePreviewProposals());
   const [selectedProposalId, setSelectedProposalId] = useState<number>(proposals[0]?.id ?? 0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [transactionState, setTransactionState] = useState(initialTransactionState);
@@ -43,7 +49,9 @@ export function GovernanceDashboard() {
   const [error, setError] = useState<string>();
   const [syncing, setSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date>();
-  const [localReputationPoints, setLocalReputationPoints] = useState(0);
+  const [loadingProposals, setLoadingProposals] = useState(mode === "live");
+  const [loadingReputation, setLoadingReputation] = useState(false);
+  const [reputation, setReputation] = useState<ReputationProfile>({ points: 0, level: "newcomer" });
 
   const selectedProposal = useMemo(
     () => proposals.find((proposal) => proposal.id === selectedProposalId),
@@ -62,6 +70,51 @@ export function GovernanceDashboard() {
     setError(undefined);
   }, []);
 
+  const refreshLiveState = useCallback(async () => {
+    if (mode !== "live") {
+      setProposals(governancePreviewProposals());
+      setLoadingProposals(false);
+      return;
+    }
+
+    setSyncing(true);
+    setLoadingProposals(true);
+    setLoadingReputation(Boolean(publicKey));
+
+    try {
+      const [nextProposals, nextReputation] = await Promise.all([
+        loadGovernanceProposals(publicKey),
+        publicKey ? getReputationProfile(publicKey) : Promise.resolve({ points: 0, level: "newcomer" as const }),
+      ]);
+
+      setProposals(nextProposals);
+      setReputation(nextReputation);
+      setSelectedProposalId((current) => {
+        if (nextProposals.some((proposal) => proposal.id === current)) {
+          return current;
+        }
+
+        return nextProposals[0]?.id ?? 0;
+      });
+      setLastSyncedAt(new Date());
+      setError(undefined);
+    } catch (nextError) {
+      setError(formatContractError(nextError));
+    } finally {
+      setLoadingProposals(false);
+      setLoadingReputation(false);
+      setSyncing(false);
+    }
+  }, [mode, publicKey]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void refreshLiveState();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [refreshLiveState]);
+
   async function handleConnect() {
     try {
       setError(undefined);
@@ -69,7 +122,7 @@ export function GovernanceDashboard() {
       await assertWalletTestnet();
       setPublicKey(address);
     } catch (nextError) {
-      setError(formatErrorMessage(nextError));
+      setError(formatContractError(nextError));
     }
   }
 
@@ -86,7 +139,7 @@ export function GovernanceDashboard() {
       await assertWalletTestnet();
       setPublicKey(address);
     } catch (nextError) {
-      setError(formatErrorMessage(nextError));
+      setError(formatContractError(nextError));
     }
   }
 
@@ -96,6 +149,11 @@ export function GovernanceDashboard() {
   }
 
   function refreshLocalState() {
+    if (mode === "live") {
+      void refreshLiveState();
+      return;
+    }
+
     setSyncing(true);
     window.setTimeout(() => {
       setLastSyncedAt(new Date());
@@ -125,42 +183,41 @@ export function GovernanceDashboard() {
       setTransactionState((current) => startTransaction(current, "preparing"));
       await assertWalletTestnet();
       setTransactionState((current) => startTransaction(current, "awaiting_signature"));
-      const result = await submitVote(
-        publicKey,
-        selectedProposal.id,
-        selectedOption,
-        (xdr) => signTransactionXdr(publicKey, xdr),
-        selectedProposal.options,
-      );
+      const result = await voteOnProposal({
+        walletAddress: publicKey,
+        proposalId: selectedProposal.id,
+        optionIndex: selectedOption,
+      });
       setTransactionState((current) => startTransaction(current, "pending"));
 
       if (result.status === "success") {
+        const submittedAt = new Date().toISOString();
         setTransactionState((current) =>
           recordSuccessfulTransaction(current, {
             hash: result.hash,
             optionIndex: selectedOption,
             optionLabel,
             proposalTitle: selectedProposal.title,
-            submittedAt: new Date().toISOString(),
+            submittedAt,
           }),
         );
-        setLocalReputationPoints((points) => points + 1);
         setActivities((current) => [
           createLocalVoteActivity({
             hash: result.hash,
             proposalTitle: selectedProposal.title,
             optionLabel,
-            submittedAt: new Date().toISOString(),
+            submittedAt,
           }),
           ...current,
         ]);
+        await refreshLiveState();
       } else {
         setTransactionState((current) =>
           recordFailedTransaction(current, "Vote transaction was not confirmed on Stellar Testnet."),
         );
       }
     } catch (nextError) {
-      const message = formatErrorMessage(nextError);
+      const message = formatContractError(nextError);
       setTransactionState((current) => recordFailedTransaction(current, message));
       setError(message);
     }
@@ -220,6 +277,7 @@ export function GovernanceDashboard() {
           <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
             <ProposalList
               contractsConfigured={config.allConfigured}
+              loading={loadingProposals}
               onSelect={handleSelectProposal}
               proposals={proposals}
               selectedProposalId={selectedProposalId}
@@ -250,7 +308,9 @@ export function GovernanceDashboard() {
             walletConnected={Boolean(publicKey)}
           />
           <ReputationCard
-            points={localReputationPoints}
+            level={reputation.level}
+            loading={loadingReputation}
+            points={reputation.points}
             publicKey={publicKey}
             reputationConfigured={config.reputationConfigured}
           />

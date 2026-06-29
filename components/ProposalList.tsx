@@ -6,6 +6,7 @@ type Props = {
   proposals: ProposalState[];
   selectedProposalId?: number;
   contractsConfigured: boolean;
+  loading?: boolean;
   onSelect: (proposalId: number) => void;
 };
 
@@ -19,6 +20,7 @@ export function ProposalList({
   proposals,
   selectedProposalId,
   contractsConfigured,
+  loading = false,
   onSelect,
 }: Props) {
   return (
@@ -39,7 +41,11 @@ export function ProposalList({
       ) : null}
 
       <div className="mt-5 space-y-3">
-        {proposals.length === 0 ? (
+        {loading ? (
+          <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-500">
+            Loading proposals from Governance contract...
+          </p>
+        ) : proposals.length === 0 ? (
           <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-500">
             No proposals loaded yet.
           </p>

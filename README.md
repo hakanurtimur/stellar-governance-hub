@@ -116,6 +116,15 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 - Mobile responsive layout implemented with single-column cards, wrapping actions, shortened IDs, and non-overflowing hashes.
 - Contract deployment is still TODO; no fake contract IDs, transaction hashes, explorer links, screenshots, or demo video are listed.
 
+## Frontend Integration
+
+- Live mode requires both `NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID` and `NEXT_PUBLIC_REPUTATION_CONTRACT_ID`.
+- Preview mode is UI-only and remains clearly labeled as local preview data when contract IDs are missing.
+- Governance client reads `list_proposals`, `get_proposal`, `get_results`, `has_voted`, and `get_reputation_contract`.
+- Reputation client reads `get_points`, `get_level`, and `get_governance_contract`.
+- Vote flow builds a Soroban `vote(voter, proposal_id, option_index)` transaction, prepares it through Stellar RPC, requests wallet signature, submits it to Stellar Testnet, and keeps the real transaction hash in the success UI.
+- Contract deployment is still TODO; do not treat preview data as submission evidence.
+
 ## Event Streaming / Activity Feed Plan
 
 The first production-ready approach will use polling:

@@ -1,16 +1,23 @@
 import { Award } from "lucide-react";
 
-import { reputationLevel } from "../lib/reputation";
+import { reputationLevel, type ReputationLevel } from "../lib/reputation";
 
 type Props = {
   publicKey?: string;
   points: number;
+  level?: ReputationLevel;
   reputationConfigured: boolean;
+  loading?: boolean;
 };
 
-export function ReputationCard({ publicKey, points, reputationConfigured }: Props) {
+export function ReputationCard({
+  publicKey,
+  points,
+  level = reputationLevel(points),
+  reputationConfigured,
+  loading = false,
+}: Props) {
   const connected = Boolean(publicKey);
-  const level = reputationLevel(points);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -29,6 +36,10 @@ export function ReputationCard({ publicKey, points, reputationConfigured }: Prop
       ) : !reputationConfigured ? (
         <p className="mt-5 rounded-md bg-amber-50 p-4 text-sm text-amber-800">
           Reputation contract not configured.
+        </p>
+      ) : loading ? (
+        <p className="mt-5 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+          Loading reputation from Reputation contract...
         </p>
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3">
