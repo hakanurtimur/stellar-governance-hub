@@ -8,12 +8,37 @@ The previous Level 2 project is only a baseline reference. Its deployed contract
 
 Current Level 3 public deployment fields:
 
-- Governance Contract ID: TODO
-- Reputation Contract ID: TODO
-- Governance interaction tx hash: TODO
-- Reputation interaction tx hash: TODO
+- Governance Contract ID: `CAN4N5DMMJOO5TBVB73AW57F4EEUQZXT2U4BJXAHAN7MKBMLSOYLTNP2`
+- Reputation Contract ID: `CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO`
+- Governance interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
+- Reputation interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
 - Live Demo: TODO
 - Demo Video: TODO
+
+Explorer links:
+
+- Governance Contract: https://lab.stellar.org/r/testnet/contract/CAN4N5DMMJOO5TBVB73AW57F4EEUQZXT2U4BJXAHAN7MKBMLSOYLTNP2
+- Reputation Contract: https://lab.stellar.org/r/testnet/contract/CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO
+- Vote and reputation reward transaction: https://stellar.expert/explorer/testnet/tx/9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4
+
+Deployment transactions:
+
+- Reputation WASM upload tx: `e8ae30bdbda13513496e98e6757ca05c2a49b5f4fd8a29392e04c3086333e2ac`
+- Reputation deploy tx: `d24c706580639786f202f7f04d20f8335a6725cf6b368fc2295f6a6675ecebc0`
+- Governance WASM upload tx: `62858e704c215b984c9b8c2d823f1ea87d7a536315b44fa11bfa87940a49ee1d`
+- Governance deploy tx: `7c1f99d78c2a835093e877d79645986449beea30c5bf878aee7ff9d4b6cc4378`
+- Reputation init tx: `f81b9925fd84d4d976ee822a06e7bb2fcd3042aa729a6076eed9f6e7898bc342`
+- Governance init tx: `afd5c2e30966868974ebfb9fa659f305f68020d4c6c28c787054eca04bb5876f`
+- Proposal 1 create tx: `65bf8a12e3eb6ec90b08de6fd63d4df600bf2a5e47194fc426922a86e3cae410`
+- Proposal 2 create tx: `686f555552aff5e13809a9c7b791554afcc7497be1ab64f0740d02f74849c531`
+
+Inter-contract proof:
+
+- Vote tx `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4` emitted Governance `vote_cast`, Reputation `rep_award`, and Governance `vote_rewarded` events.
+- `get_results(1)` returned `[1,0,0]`.
+- `has_voted(1, deployer)` returned `true`.
+- `get_points(deployer)` returned `1`.
+- `get_level(deployer)` returned `participant`.
 
 ## Level 3 Requirements Mapping
 
@@ -114,7 +139,7 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 - Transaction hash display is retained after real successful submissions.
 - Loading, error, missing-env, unconfigured, already-voted, and submitted states are represented.
 - Mobile responsive layout implemented with single-column cards, wrapping actions, shortened IDs, and non-overflowing hashes.
-- Contract deployment is still TODO; no fake contract IDs, transaction hashes, explorer links, screenshots, or demo video are listed.
+- Contracts are deployed to Stellar Testnet with real public IDs and transaction hashes listed above. Demo screenshots and video remain TODO.
 
 ## Frontend Integration
 
@@ -123,7 +148,7 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 - Governance client reads `list_proposals`, `get_proposal`, `get_results`, `has_voted`, and `get_reputation_contract`.
 - Reputation client reads `get_points`, `get_level`, and `get_governance_contract`.
 - Vote flow builds a Soroban `vote(voter, proposal_id, option_index)` transaction, prepares it through Stellar RPC, requests wallet signature, submits it to Stellar Testnet, and keeps the real transaction hash in the success UI.
-- Contract deployment is still TODO; do not treat preview data as submission evidence.
+- Contract deployment is complete on Stellar Testnet; preview mode still remains UI-only when env IDs are missing.
 
 ## Event Streaming / Activity Feed Plan
 
@@ -203,8 +228,8 @@ Frontend tests:
 Primary Level 3 variables:
 
 ```bash
-NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=
-NEXT_PUBLIC_REPUTATION_CONTRACT_ID=
+NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=CAN4N5DMMJOO5TBVB73AW57F4EEUQZXT2U4BJXAHAN7MKBMLSOYLTNP2
+NEXT_PUBLIC_REPUTATION_CONTRACT_ID=CAI2YIQQXQAPJ2GKA6I66GRENFSVCVELKOGZ7BA7PLMWNMUAIKFKRBHO
 NEXT_PUBLIC_STELLAR_NETWORK=testnet
 NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 ```
@@ -287,16 +312,16 @@ The demo should show wallet connection, proposal voting, transaction status, act
 - [x] Project renamed to Stellar Governance Hub.
 - [x] Level 2 deployment claims removed from README.
 - [x] Level 3 environment variable names added.
-- [ ] Governance contract finalized.
-- [ ] Reputation contract finalized.
+- [x] Governance contract finalized.
+- [x] Reputation contract finalized.
 - [x] Inter-contract communication finalized.
 - [x] Frontend proposal list/detail finalized.
-- [ ] Wallet vote flow finalized against deployed Governance Contract.
+- [x] Wallet vote flow finalized against deployed Governance Contract.
 - [x] Reputation UI finalized.
 - [x] Activity feed UI finalized.
 - [x] CI/CD finalized.
-- [ ] Contract deployment workflow verified.
-- [ ] Contracts deployed to Stellar Testnet.
-- [ ] README updated with real Level 3 contract IDs and transaction hashes.
+- [x] Contract deployment workflow verified.
+- [x] Contracts deployed to Stellar Testnet.
+- [x] README updated with real Level 3 contract IDs and transaction hashes.
 - [ ] Level 3 screenshots captured.
 - [ ] Demo video recorded.
