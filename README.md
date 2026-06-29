@@ -64,7 +64,7 @@ Inter-contract proof:
 - Tests for contracts and frontend: contract unit tests plus Vitest frontend/unit coverage.
 - Production-ready architecture: separated contracts, frontend components, helpers, docs, and CI.
 - Complete documentation: README plus deployment workflow docs.
-- Demo presentation/video readiness: demo video link is included; screenshots remain TODO until real artifacts are captured.
+- Demo presentation/video readiness: demo video link and final screenshot artifacts are included.
 
 ## Architecture
 
@@ -151,7 +151,7 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 - Transaction hash display is retained after real successful submissions.
 - Loading, error, missing-env, unconfigured, already-voted, and submitted states are represented.
 - Mobile responsive layout implemented with single-column cards, wrapping actions, shortened IDs, and non-overflowing hashes.
-- Contracts are deployed to Stellar Testnet with real public IDs and transaction hashes listed above. Demo video is linked; final screenshots remain TODO.
+- Contracts are deployed to Stellar Testnet with real public IDs and transaction hashes listed above. Demo video and final screenshots are linked/included.
 
 ## Frontend Integration
 
@@ -319,11 +319,7 @@ Deployment order:
 
 ## Screenshots
 
-Level 3 screenshots: TODO
-
-Do not reuse Level 2 screenshots as Level 3 evidence. New screenshots should be captured after the governance dashboard and real Testnet flows are ready.
-
-Add real screenshots before submission. The existing legacy screenshots are baseline artifacts and should not be used as final Level 3 proof unless recaptured from the live Governance Hub flow.
+Final Level 3 screenshots are included under `screenshots/`. They should be captured from the live Governance Hub flow, GitHub Actions, or final verification output.
 
 Required screenshot paths:
 
@@ -375,5 +371,5 @@ Target length: 1-2 minutes.
 - [x] Contracts deployed to Stellar Testnet.
 - [x] README updated with real Level 3 contract IDs and transaction hashes.
 - [x] Live demo URL added.
-- [ ] Level 3 screenshots captured.
+- [x] Level 3 screenshots captured.
 - [x] Demo video recorded.
