@@ -8,12 +8,12 @@ mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Vec};
 
 use crate::errors::GovernanceError;
 use crate::events::{
     publish_governance_initialized, publish_proposal_closed, publish_proposal_created,
-    publish_vote_cast,
+    publish_vote_cast, publish_vote_rewarded,
 };
 use crate::storage::{
     get_admin, get_proposal, get_proposal_ids, get_reputation_contract, get_results, has_initialized,
@@ -161,7 +161,20 @@ impl GovernanceContract {
         set_results(&env, proposal_id, &results);
         set_proposal(&env, proposal_id, &proposal);
         set_has_voted(&env, proposal_id, &voter);
-        publish_vote_cast(&env, proposal_id, voter, option_index, proposal.total_votes);
+        publish_vote_cast(&env, proposal_id, voter.clone(), option_index, proposal.total_votes);
+
+        let reputation_contract =
+            get_reputation_contract(&env).ok_or(GovernanceError::NotInitialized)?;
+        let _: u32 = env.invoke_contract(
+            &reputation_contract,
+            &Symbol::new(&env, "award_point"),
+            vec![
+                &env,
+                env.current_contract_address().into_val(&env),
+                voter.clone().into_val(&env),
+            ],
+        );
+        publish_vote_rewarded(&env, proposal_id, voter, reputation_contract);
 
         Ok(())
     }

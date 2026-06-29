@@ -1,25 +1,47 @@
 use super::*;
 use crate::errors::GovernanceError;
-use soroban_sdk::{testutils::Address as _, testutils::Ledger, vec, Address, Env, String};
+use soroban_sdk::{
+    testutils::Address as _, testutils::Events, testutils::Ledger, vec, Address, Env, String,
+    Symbol, TryFromVal,
+};
+use stellar_reputation_contract::{ReputationContract, ReputationContractClient};
 
 const NOW: u64 = 1_000;
 
-fn setup_client(env: &Env) -> (GovernanceContractClient<'_>, Address, Address, Address) {
+fn setup_client(
+    env: &Env,
+) -> (
+    GovernanceContractClient<'_>,
+    ReputationContractClient<'_>,
+    Address,
+    Address,
+    Address,
+) {
     env.mock_all_auths();
     env.ledger().set_timestamp(NOW);
-    let contract_id = env.register(GovernanceContract, ());
-    let client = GovernanceContractClient::new(env, &contract_id);
+    let governance_id = env.register(GovernanceContract, ());
+    let reputation_id = env.register(ReputationContract, ());
+    let client = GovernanceContractClient::new(env, &governance_id);
+    let reputation = ReputationContractClient::new(env, &reputation_id);
     let admin = Address::generate(env);
-    let reputation_contract = Address::generate(env);
     let creator = Address::generate(env);
 
-    (client, admin, reputation_contract, creator)
+    (client, reputation, admin, reputation_id, creator)
 }
 
-fn initialized_client(env: &Env) -> (GovernanceContractClient<'_>, Address, Address, Address) {
-    let (client, admin, reputation_contract, creator) = setup_client(env);
-    client.initialize(&admin, &reputation_contract);
-    (client, admin, reputation_contract, creator)
+fn initialized_client(
+    env: &Env,
+) -> (
+    GovernanceContractClient<'_>,
+    ReputationContractClient<'_>,
+    Address,
+    Address,
+    Address,
+) {
+    let (client, reputation, admin, reputation_id, creator) = setup_client(env);
+    reputation.initialize(&admin, &client.address);
+    client.initialize(&admin, &reputation_id);
+    (client, reputation, admin, reputation_id, creator)
 }
 
 fn create_default_proposal(
@@ -43,7 +65,7 @@ fn create_default_proposal(
 #[test]
 fn initialize_stores_admin_and_reputation_contract() {
     let env = Env::default();
-    let (client, _, reputation_contract, _) = initialized_client(&env);
+    let (client, _, _, reputation_contract, _) = initialized_client(&env);
 
     assert_eq!(client.get_reputation_contract(), reputation_contract);
 }
@@ -51,7 +73,7 @@ fn initialize_stores_admin_and_reputation_contract() {
 #[test]
 fn cannot_initialize_twice() {
     let env = Env::default();
-    let (client, admin, reputation_contract, _) = initialized_client(&env);
+    let (client, _, admin, reputation_contract, _) = initialized_client(&env);
 
     assert_eq!(
         client.try_initialize(&admin, &reputation_contract),
@@ -62,7 +84,7 @@ fn cannot_initialize_twice() {
 #[test]
 fn create_proposal_stores_proposal_with_options_and_counter() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
 
     let first_id = create_default_proposal(&env, &client, &creator);
     let second_id = client.create_proposal(
@@ -96,7 +118,7 @@ fn create_proposal_stores_proposal_with_options_and_counter() {
 #[test]
 fn create_proposal_rejects_less_than_two_options() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
 
     assert_eq!(
         client.try_create_proposal(
@@ -113,7 +135,7 @@ fn create_proposal_rejects_less_than_two_options() {
 #[test]
 fn create_proposal_rejects_invalid_deadline() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
 
     assert_eq!(
         client.try_create_proposal(
@@ -134,7 +156,7 @@ fn create_proposal_rejects_invalid_deadline() {
 #[test]
 fn create_proposal_rejects_empty_title_and_too_many_options() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
 
     assert_eq!(
         client.try_create_proposal(
@@ -173,7 +195,7 @@ fn create_proposal_rejects_empty_title_and_too_many_options() {
 #[test]
 fn vote_records_selected_option_and_increments_result() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -186,7 +208,7 @@ fn vote_records_selected_option_and_increments_result() {
 #[test]
 fn duplicate_vote_fails() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -201,7 +223,7 @@ fn duplicate_vote_fails() {
 #[test]
 fn invalid_option_fails() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -214,7 +236,7 @@ fn invalid_option_fails() {
 #[test]
 fn closed_proposal_cannot_be_voted_on() {
     let env = Env::default();
-    let (client, admin, _, creator) = initialized_client(&env);
+    let (client, _, admin, _, creator) = initialized_client(&env);
     let voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -229,7 +251,7 @@ fn closed_proposal_cannot_be_voted_on() {
 #[test]
 fn deadline_passed_proposal_cannot_be_voted_on() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -244,7 +266,7 @@ fn deadline_passed_proposal_cannot_be_voted_on() {
 #[test]
 fn close_proposal_works_for_admin() {
     let env = Env::default();
-    let (client, admin, _, creator) = initialized_client(&env);
+    let (client, _, admin, _, creator) = initialized_client(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
     client.close_proposal(&admin, &proposal_id);
@@ -255,7 +277,7 @@ fn close_proposal_works_for_admin() {
 #[test]
 fn close_proposal_works_for_creator() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
     client.close_proposal(&creator, &proposal_id);
@@ -266,7 +288,7 @@ fn close_proposal_works_for_creator() {
 #[test]
 fn unauthorized_close_fails() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let attacker = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
@@ -279,7 +301,7 @@ fn unauthorized_close_fails() {
 #[test]
 fn closing_already_closed_proposal_fails() {
     let env = Env::default();
-    let (client, admin, _, creator) = initialized_client(&env);
+    let (client, _, admin, _, creator) = initialized_client(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
 
     client.close_proposal(&admin, &proposal_id);
@@ -293,7 +315,7 @@ fn closing_already_closed_proposal_fails() {
 #[test]
 fn get_results_returns_expected_counts_and_has_voted_updates() {
     let env = Env::default();
-    let (client, _, _, creator) = initialized_client(&env);
+    let (client, _, _, _, creator) = initialized_client(&env);
     let first_voter = Address::generate(&env);
     let second_voter = Address::generate(&env);
     let proposal_id = create_default_proposal(&env, &client, &creator);
@@ -305,4 +327,136 @@ fn get_results_returns_expected_counts_and_has_voted_updates() {
 
     assert_eq!(client.has_voted(&proposal_id, &first_voter), true);
     assert_eq!(client.get_results(&proposal_id), vec![&env, 1_u32, 1_u32]);
+}
+
+#[test]
+fn vote_awards_one_reputation_point() {
+    let env = Env::default();
+    let (governance, reputation, _, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    governance.vote(&voter, &proposal_id, &0);
+
+    assert_eq!(reputation.get_points(&voter), 1);
+    assert_eq!(
+        reputation.get_level(&voter),
+        String::from_str(&env, "participant")
+    );
+}
+
+#[test]
+fn duplicate_vote_does_not_award_second_point() {
+    let env = Env::default();
+    let (governance, reputation, _, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    governance.vote(&voter, &proposal_id, &0);
+    assert_eq!(
+        governance.try_vote(&voter, &proposal_id, &1),
+        Err(Ok(GovernanceError::AlreadyVoted))
+    );
+
+    assert_eq!(reputation.get_points(&voter), 1);
+}
+
+#[test]
+fn invalid_vote_does_not_award_point() {
+    let env = Env::default();
+    let (governance, reputation, _, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    assert_eq!(
+        governance.try_vote(&voter, &proposal_id, &9),
+        Err(Ok(GovernanceError::InvalidOption))
+    );
+
+    assert_eq!(reputation.get_points(&voter), 0);
+}
+
+#[test]
+fn closed_proposal_vote_does_not_award_point() {
+    let env = Env::default();
+    let (governance, reputation, admin, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    governance.close_proposal(&admin, &proposal_id);
+    assert_eq!(
+        governance.try_vote(&voter, &proposal_id, &0),
+        Err(Ok(GovernanceError::ProposalClosed))
+    );
+
+    assert_eq!(reputation.get_points(&voter), 0);
+}
+
+#[test]
+fn unauthorized_direct_reputation_award_fails() {
+    let env = Env::default();
+    let (_, reputation, _, _, _) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let attacker = Address::generate(&env);
+
+    assert!(reputation.try_award_point(&attacker, &voter).is_err());
+    assert_eq!(reputation.get_points(&voter), 0);
+}
+
+#[test]
+fn multiple_successful_votes_on_different_proposals_increase_reputation() {
+    let env = Env::default();
+    let (governance, reputation, _, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let first_proposal = create_default_proposal(&env, &governance, &creator);
+    let second_proposal = governance.create_proposal(
+        &creator,
+        &String::from_str(&env, "Fund infra working group?"),
+        &String::from_str(&env, "Create an infrastructure grants workstream."),
+        &vec![
+            &env,
+            String::from_str(&env, "Approve"),
+            String::from_str(&env, "Reject"),
+        ],
+        &(NOW + 200),
+    );
+
+    governance.vote(&voter, &first_proposal, &0);
+    governance.vote(&voter, &second_proposal, &1);
+
+    assert_eq!(reputation.get_points(&voter), 2);
+}
+
+#[test]
+fn governance_stores_and_uses_configured_reputation_contract() {
+    let env = Env::default();
+    let (governance, reputation, _, reputation_id, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    assert_eq!(governance.get_reputation_contract(), reputation_id);
+    governance.vote(&voter, &proposal_id, &0);
+
+    assert_eq!(reputation.get_points(&voter), 1);
+}
+
+#[test]
+fn vote_emits_reward_event_topic() {
+    let env = Env::default();
+    let (governance, _, _, _, creator) = initialized_client(&env);
+    let voter = Address::generate(&env);
+    let proposal_id = create_default_proposal(&env, &governance, &creator);
+
+    governance.vote(&voter, &proposal_id, &0);
+
+    let events = env.events().all();
+    let reward_symbol = Symbol::new(&env, "vote_rewarded");
+    let has_reward_event = events.iter().any(|(_, topics, _)| {
+        topics
+            .get(0)
+            .and_then(|topic| Symbol::try_from_val(&env, &topic).ok())
+            .map(|topic| topic == reward_symbol)
+            .unwrap_or(false)
+    });
+    assert!(has_reward_event);
 }

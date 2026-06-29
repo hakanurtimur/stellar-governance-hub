@@ -88,15 +88,19 @@ Foundation implemented in `contracts/reputation`:
 
 ### Inter-contract Communication
 
-Next stage. The required Level 3 flow will be:
+Implemented in the contract layer. `Governance.vote` now calls `Reputation.award_point` with the Governance contract address as the authorized caller.
 
 ```text
 User votes
 → Governance Contract validates and records the vote
-→ Governance Contract calls Reputation Contract
+→ Governance Contract increments proposal results and marks has_voted
+→ Governance Contract emits vote_cast
+→ Governance Contract calls Reputation Contract in the same transaction
 → Reputation Contract awards 1 participation point
-→ frontend refreshes proposal results, reputation, and activity feed
+→ Governance Contract emits vote_rewarded
 ```
+
+If the Reputation call fails, the vote transaction fails as well, keeping proposal votes and reputation points consistent.
 
 ## Frontend Features
 
@@ -237,7 +241,7 @@ The demo should show wallet connection, proposal voting, transaction status, act
 - [x] Level 3 environment variable names added.
 - [ ] Governance contract finalized.
 - [ ] Reputation contract finalized.
-- [ ] Inter-contract communication finalized.
+- [x] Inter-contract communication finalized.
 - [ ] Frontend proposal list/detail finalized.
 - [ ] Wallet vote flow finalized against Governance Contract.
 - [ ] Reputation UI finalized against Reputation Contract.

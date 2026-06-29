@@ -30,6 +30,14 @@ pub struct ProposalClosedEvent {
     pub closed_by: Address,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VoteRewardedEvent {
+    pub proposal_id: u32,
+    pub voter: Address,
+    pub reputation_contract: Address,
+}
+
 pub fn publish_governance_initialized(env: &Env, admin: Address, reputation_contract: Address) {
     env.events().publish(
         (Symbol::new(env, "governance_initialized"), admin.clone()),
@@ -74,6 +82,22 @@ pub fn publish_proposal_closed(env: &Env, proposal_id: u32, closed_by: Address) 
         ProposalClosedEvent {
             proposal_id,
             closed_by,
+        },
+    );
+}
+
+pub fn publish_vote_rewarded(
+    env: &Env,
+    proposal_id: u32,
+    voter: Address,
+    reputation_contract: Address,
+) {
+    env.events().publish(
+        (Symbol::new(env, "vote_rewarded"), voter.clone()),
+        VoteRewardedEvent {
+            proposal_id,
+            voter,
+            reputation_contract,
         },
     );
 }
