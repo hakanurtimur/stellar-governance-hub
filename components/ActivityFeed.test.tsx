@@ -5,11 +5,11 @@ import { ActivityFeed } from "./ActivityFeed";
 import type { LastTransaction } from "../lib/transaction-state";
 
 const lastTransaction: LastTransaction = {
-  hash: "0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223",
+  hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   optionIndex: 1,
   optionLabel: "Payments",
   explorerUrl:
-    "https://stellar.expert/explorer/testnet/tx/0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223",
+    "https://stellar.expert/explorer/testnet/tx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   submittedAt: "2026-06-29T10:00:00.000Z",
 };
 
@@ -21,7 +21,7 @@ describe("ActivityFeed", () => {
 
     expect(html).toContain("Vote submitted");
     expect(html).toContain("Option: Payments");
-    expect(html).toContain("0293b634...0d363223");
+    expect(html).toContain("aaaaaaaa...aaaaaaaa");
     expect(html).toContain("View on Explorer");
     expect(html).not.toContain("Vote activity will appear");
   });

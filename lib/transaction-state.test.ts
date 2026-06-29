@@ -10,7 +10,7 @@ import {
   transactionStatusAfterRefresh,
 } from "./transaction-state";
 
-const hash = "0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223";
+const hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 describe("transaction state", () => {
   it("keeps the successful vote hash in last transaction state", () => {
