@@ -54,7 +54,7 @@ Stellar Governance Hub
 
 ### Governance Contract
 
-Target responsibilities:
+Foundation implemented in `contracts/governance`:
 
 - `initialize(admin, reputation_contract)`
 - `create_proposal(creator, title, description, options, deadline)`
@@ -64,6 +64,9 @@ Target responsibilities:
 - `get_results(proposal_id)`
 - `has_voted(proposal_id, voter)`
 - `close_proposal(caller, proposal_id)`
+- `get_reputation_contract()`
+- stores proposal `id`, `creator`, `title`, `description`, `options`, `created_at`, `deadline`, `is_closed`, and `total_votes`
+- validates title, option count, future deadline, duplicate votes, close authorization, and voting deadline
 - emit `proposal_created`
 - emit `vote_cast`
 - emit `proposal_closed`
@@ -85,7 +88,7 @@ Foundation implemented in `contracts/reputation`:
 
 ### Inter-contract Communication
 
-The required Level 3 flow:
+Next stage. The required Level 3 flow will be:
 
 ```text
 User votes

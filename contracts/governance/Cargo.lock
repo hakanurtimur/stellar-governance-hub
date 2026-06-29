@@ -1500,14 +1500,6 @@ name = "stellar-governance-contract"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
- "stellar-reputation-contract",
-]
-
-[[package]]
-name = "stellar-reputation-contract"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
 ]
 
 [[package]]

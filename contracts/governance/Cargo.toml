@@ -12,7 +12,6 @@ soroban-sdk = "23.0.3"
 
 [dev-dependencies]
 soroban-sdk = { version = "23.0.3", features = ["testutils"] }
-stellar-reputation-contract = { path = "../reputation" }
 
 [profile.release]
 opt-level = "z"
