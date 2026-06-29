@@ -13,7 +13,7 @@ Current Level 3 public deployment fields:
 - Governance interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
 - Reputation interaction tx hash: `9739b673a4b035d23ac5d54d13bf98ba4f81657262f1f4b727cbbc9eee825ee4`
 - Live Demo: https://stellar-governance-hub.vercel.app/
-- Demo Video: TODO
+- Demo Video: https://canva.link/mies8z6f0egxqyj
 
 Explorer links:
 
@@ -29,9 +29,9 @@ The live deployment should be configured with the public Testnet contract IDs li
 
 ## Demo Video
 
-Demo Video: TODO
+Demo Video: https://canva.link/mies8z6f0egxqyj
 
-The demo video link will be added after the final recording is uploaded. Do not use placeholder or private links as submission evidence.
+The demo video shows the final Level 3 governance flow using the deployed Stellar Testnet contracts.
 
 Deployment transactions:
 
@@ -64,7 +64,7 @@ Inter-contract proof:
 - Tests for contracts and frontend: contract unit tests plus Vitest frontend/unit coverage.
 - Production-ready architecture: separated contracts, frontend components, helpers, docs, and CI.
 - Complete documentation: README plus deployment workflow docs.
-- Demo presentation/video readiness: screenshots and demo video sections remain TODO until real artifacts exist.
+- Demo presentation/video readiness: demo video link is included; screenshots remain TODO until real artifacts are captured.
 
 ## Architecture
 
@@ -151,7 +151,7 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 - Transaction hash display is retained after real successful submissions.
 - Loading, error, missing-env, unconfigured, already-voted, and submitted states are represented.
 - Mobile responsive layout implemented with single-column cards, wrapping actions, shortened IDs, and non-overflowing hashes.
-- Contracts are deployed to Stellar Testnet with real public IDs and transaction hashes listed above. Demo screenshots and video remain TODO.
+- Contracts are deployed to Stellar Testnet with real public IDs and transaction hashes listed above. Demo video is linked; final screenshots remain TODO.
 
 ## Frontend Integration
 
@@ -338,7 +338,7 @@ Required screenshot paths:
 
 ## Demo Video
 
-Demo video: TODO
+Demo video: https://canva.link/mies8z6f0egxqyj
 
 The demo should show wallet connection, proposal voting, transaction status, activity feed update, and reputation point update using real Testnet data.
 
@@ -376,4 +376,4 @@ Target length: 1-2 minutes.
 - [x] README updated with real Level 3 contract IDs and transaction hashes.
 - [x] Live demo URL added.
 - [ ] Level 3 screenshots captured.
-- [ ] Demo video recorded.
+- [x] Demo video recorded.
