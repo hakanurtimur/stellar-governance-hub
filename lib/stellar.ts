@@ -4,6 +4,9 @@ export const STELLAR_NETWORK = process.env.NEXT_PUBLIC_STELLAR_NETWORK ?? "testn
 export const STELLAR_RPC_URL =
   process.env.NEXT_PUBLIC_STELLAR_RPC_URL ?? "https://soroban-testnet.stellar.org";
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID ?? "";
+export const GOVERNANCE_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID ?? CONTRACT_ID;
+export const REPUTATION_CONTRACT_ID = process.env.NEXT_PUBLIC_REPUTATION_CONTRACT_ID ?? "";
 
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
 
