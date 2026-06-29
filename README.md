@@ -137,16 +137,46 @@ The first production-ready approach will use polling:
 
 If direct event streaming becomes reliable in the target environment, the polling layer can be replaced behind the same activity feed interface.
 
-## CI/CD Plan
+## CI/CD
 
-GitHub Actions should run on push and pull request:
+Workflow file: `.github/workflows/ci.yml`
 
-- `npm test`
-- `npm run lint`
-- `npm run build`
-- `cargo test --locked` for Governance
-- `cargo test --locked` for Reputation
-- `stellar contract build` when Stellar CLI is available in CI
+GitHub Actions runs on push and pull request targeting `main` or `master`.
+
+Frontend job:
+
+- installs dependencies with `pnpm install --frozen-lockfile`;
+- runs `pnpm test`;
+- runs `pnpm lint`;
+- runs `pnpm build`.
+
+Smart contract job:
+
+- installs Rust stable with `wasm32v1-none`;
+- installs Stellar CLI `27.0.0` with `cargo install --locked stellar-cli --version 27.0.0`;
+- prints `stellar --version`;
+- runs `cargo test --locked` in `contracts/governance`;
+- runs `stellar contract build` in `contracts/governance`;
+- runs `cargo test --locked` in `contracts/reputation`;
+- runs `stellar contract build` in `contracts/reputation`.
+
+Local verification:
+
+```bash
+pnpm test
+pnpm lint
+pnpm build
+
+cd contracts/governance
+cargo test
+stellar contract build
+
+cd ../reputation
+cargo test
+stellar contract build
+```
+
+CI screenshot for submission should be captured from the GitHub Actions run page. Test output screenshot can be captured from the local terminal or GitHub Actions logs.
 
 ## Testing Plan
 
@@ -234,6 +264,17 @@ Level 3 screenshots: TODO
 
 Do not reuse Level 2 screenshots as Level 3 evidence. New screenshots should be captured after the governance dashboard and real Testnet flows are ready.
 
+Required screenshot paths:
+
+- `screenshots/mobile-responsive.png`
+- `screenshots/github-actions-ci.png`
+- `screenshots/test-output.png`
+- `screenshots/wallet-connected.png`
+- `screenshots/proposal-vote-success.png`
+- `screenshots/transaction-hash.png`
+- `screenshots/reputation-points.png`
+- `screenshots/activity-feed.png`
+
 ## Demo Video
 
 Demo video: TODO
@@ -253,7 +294,7 @@ The demo should show wallet connection, proposal voting, transaction status, act
 - [ ] Wallet vote flow finalized against deployed Governance Contract.
 - [x] Reputation UI finalized.
 - [x] Activity feed UI finalized.
-- [ ] CI/CD finalized.
+- [x] CI/CD finalized.
 - [ ] Contract deployment workflow verified.
 - [ ] Contracts deployed to Stellar Testnet.
 - [ ] README updated with real Level 3 contract IDs and transaction hashes.

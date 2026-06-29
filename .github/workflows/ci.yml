@@ -1,42 +1,45 @@
-name: CI
+name: Stellar Governance Hub CI
 
 on:
   push:
+    branches: [main, master]
   pull_request:
+    branches: [main, master]
 
 jobs:
   frontend:
     name: Frontend
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test
-        run: npm test
+      - name: Test frontend
+        run: pnpm test
 
-      - name: Lint
-        run: npm run lint
+      - name: Lint frontend
+        run: pnpm lint
 
-      - name: Build
-        run: npm run build
+      - name: Build frontend
+        run: pnpm build
 
   contracts:
-    name: Contracts
-    runs-on: macos-latest
+    name: Smart Contracts
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,28 +49,31 @@ jobs:
         with:
           targets: wasm32v1-none
 
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            contracts/governance
+            contracts/reputation
+
+      - name: Install Stellar CLI
+        run: cargo install --locked stellar-cli --version 27.0.0
+
+      - name: Show Stellar CLI version
+        run: stellar --version
+
       - name: Test governance contract
         working-directory: contracts/governance
         run: cargo test --locked
+
+      - name: Build governance contract
+        working-directory: contracts/governance
+        run: stellar contract build
 
       - name: Test reputation contract
         working-directory: contracts/reputation
         run: cargo test --locked
 
-      - name: Build governance contract if Stellar CLI is available
-        working-directory: contracts/governance
-        run: |
-          if command -v stellar >/dev/null 2>&1; then
-            stellar contract build
-          else
-            echo "Stellar CLI is not installed in CI; skipping stellar contract build."
-          fi
-
-      - name: Build reputation contract if Stellar CLI is available
+      - name: Build reputation contract
         working-directory: contracts/reputation
-        run: |
-          if command -v stellar >/dev/null 2>&1; then
-            stellar contract build
-          else
-            echo "Stellar CLI is not installed in CI; skipping stellar contract build."
-          fi
+        run: stellar contract build
