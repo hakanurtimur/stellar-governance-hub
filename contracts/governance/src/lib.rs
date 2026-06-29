@@ -1,7 +1,8 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, String, Vec,
+    contract, contracterror, contractimpl, contracttype, symbol_short, vec, Address, Env, IntoVal,
+    String, Symbol, Vec,
 };
 
 #[contract]
@@ -10,10 +11,14 @@ pub struct GovernanceContract;
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
+    Initialized,
+    Admin,
+    ReputationContract,
     ProposalCounter,
     Proposal(u32),
     Results(u32),
     ProposalIds,
+    Voted(u32, Address),
 }
 
 #[contracttype]
@@ -35,16 +40,49 @@ pub struct ProposalCreatedEvent {
     pub creator: Address,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VoteCastEvent {
+    pub proposal_id: u32,
+    pub voter: Address,
+    pub option_index: u32,
+}
+
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum GovernanceError {
     ProposalNotFound = 1,
     NoOptions = 2,
+    AlreadyInitialized = 3,
+    NotInitialized = 4,
+    InvalidOption = 5,
+    AlreadyVoted = 6,
+    ProposalClosed = 7,
 }
 
 #[contractimpl]
 impl GovernanceContract {
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        reputation_contract: Address,
+    ) -> Result<(), GovernanceError> {
+        admin.require_auth();
+
+        if env.storage().persistent().has(&DataKey::Initialized) {
+            return Err(GovernanceError::AlreadyInitialized);
+        }
+
+        env.storage().persistent().set(&DataKey::Admin, &admin);
+        env.storage()
+            .persistent()
+            .set(&DataKey::ReputationContract, &reputation_contract);
+        env.storage().persistent().set(&DataKey::Initialized, &true);
+
+        Ok(())
+    }
+
     pub fn create_proposal(
         env: Env,
         creator: Address,
@@ -138,6 +176,75 @@ impl GovernanceContract {
             .ok_or(GovernanceError::ProposalNotFound)
     }
 
+    pub fn vote(
+        env: Env,
+        voter: Address,
+        proposal_id: u32,
+        option_index: u32,
+    ) -> Result<(), GovernanceError> {
+        voter.require_auth();
+
+        let mut proposal = Self::get_proposal(env.clone(), proposal_id)?;
+        if !proposal.open {
+            return Err(GovernanceError::ProposalClosed);
+        }
+
+        let voted_key = DataKey::Voted(proposal_id, voter.clone());
+        if env.storage().persistent().has(&voted_key) {
+            return Err(GovernanceError::AlreadyVoted);
+        }
+
+        let mut results = Self::get_results(env.clone(), proposal_id)?;
+        if option_index >= results.len() {
+            return Err(GovernanceError::InvalidOption);
+        }
+
+        let current = results
+            .get(option_index)
+            .ok_or(GovernanceError::InvalidOption)?;
+        results.set(option_index, current + 1);
+        proposal.open = true;
+
+        env.storage()
+            .persistent()
+            .set(&DataKey::Results(proposal_id), &results);
+        env.storage().persistent().set(&voted_key, &true);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Proposal(proposal_id), &proposal);
+
+        let reputation_contract: Address = env
+            .storage()
+            .persistent()
+            .get(&DataKey::ReputationContract)
+            .ok_or(GovernanceError::NotInitialized)?;
+        let _: u32 = env.invoke_contract(
+            &reputation_contract,
+            &Symbol::new(&env, "award_point"),
+            vec![
+                &env,
+                env.current_contract_address().into_val(&env),
+                voter.clone().into_val(&env)
+            ],
+        );
+        env.events().publish(
+            (symbol_short!("vote"), voter.clone()),
+            VoteCastEvent {
+                proposal_id,
+                voter,
+                option_index,
+            },
+        );
+
+        Ok(())
+    }
+
+    pub fn has_voted(env: Env, proposal_id: u32, voter: Address) -> bool {
+        env.storage()
+            .persistent()
+            .has(&DataKey::Voted(proposal_id, voter))
+    }
+
     fn proposal_ids(env: &Env) -> Vec<u32> {
         env.storage()
             .persistent()
@@ -150,6 +257,7 @@ impl GovernanceContract {
 mod test {
     use super::*;
     use soroban_sdk::{testutils::Address as _, vec, Env};
+    use stellar_reputation_contract::{ReputationContract, ReputationContractClient};
 
     #[test]
     fn creates_and_lists_proposals_with_empty_results() {
@@ -182,5 +290,38 @@ mod test {
         assert_eq!(proposal.open, true);
         assert_eq!(client.get_results(&proposal_id), vec![&env, 0_u32, 0_u32]);
         assert_eq!(client.list_proposals(&0_u32, &10_u32).len(), 1);
+    }
+
+    #[test]
+    fn vote_records_choice_and_awards_reputation_point() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let governance_id = env.register(GovernanceContract, ());
+        let reputation_id = env.register(ReputationContract, ());
+        let governance = GovernanceContractClient::new(&env, &governance_id);
+        let reputation = ReputationContractClient::new(&env, &reputation_id);
+        let admin = Address::generate(&env);
+        let creator = Address::generate(&env);
+        let voter = Address::generate(&env);
+
+        reputation.initialize(&admin, &governance_id);
+        governance.initialize(&admin, &reputation_id);
+        let proposal_id = governance.create_proposal(
+            &creator,
+            &String::from_str(&env, "Approve protocol grant?"),
+            &String::from_str(&env, "Fund advanced Stellar governance tooling."),
+            &vec![
+                &env,
+                String::from_str(&env, "Approve"),
+                String::from_str(&env, "Reject"),
+            ],
+            &1_000_u64,
+        );
+
+        governance.vote(&voter, &proposal_id, &0_u32);
+
+        assert_eq!(governance.get_results(&proposal_id), vec![&env, 1_u32, 0_u32]);
+        assert!(governance.has_voted(&proposal_id, &voter));
+        assert_eq!(reputation.get_points(&voter), 1);
     }
 }
