@@ -21,7 +21,7 @@ export function ContractCard() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Contract
           </p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">Stellar Testnet proof</h2>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950">Governance deployment</h2>
         </div>
         <FileCode2 className="h-6 w-6 text-cyan-600" />
       </div>
@@ -67,7 +67,7 @@ export function ContractCard() {
           </a>
         ) : (
           <p className="rounded-md bg-amber-50 p-3 text-amber-800">
-            Add NEXT_PUBLIC_CONTRACT_ID before deploying this frontend.
+            Add contract IDs after deploying the Level 3 governance contracts.
           </p>
         )}
       </div>

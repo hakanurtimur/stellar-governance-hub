@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Stellar Live Poll",
-  description: "A Stellar testnet live poll dApp with multi-wallet voting.",
+  title: "Stellar Governance Hub",
+  description: "A production-style Stellar Testnet governance dApp with proposals, voting, and reputation.",
 };
 
 export default function RootLayout({

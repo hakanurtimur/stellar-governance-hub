@@ -1,42 +1,36 @@
-# Stellar Live Poll
+# Stellar Governance Hub
 
-Live Demo: [https://stellar-live-pol.vercel.app/](https://stellar-live-pol.vercel.app/)
+Stellar Governance Hub is the Level 3 evolution of the Level 2 Stellar Live Poll project. It will become a production-style Stellar Testnet governance dApp with proposal management, on-chain voting, inter-contract reputation rewards, live activity updates, CI/CD, tests, deployment documentation, and demo-ready assets.
 
-Deployed Contract Address: `CBYUYRYPOKU5PMS4A2XC4WCUI6S3ZE3RTRZPSSGGJWKDIN2BPWXVIFY3`
+## Current Status
 
-Contract Call Transaction Hash: `0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223`
+This repository has been initialized from the working Level 2 baseline in a separate Git history. The Level 2 review repository is intentionally left untouched.
 
-Contract Explorer: [Stellar Expert Testnet Contract](https://stellar.expert/explorer/testnet/contract/CBYUYRYPOKU5PMS4A2XC4WCUI6S3ZE3RTRZPSSGGJWKDIN2BPWXVIFY3)
+The current baseline still contains the original single-poll contract and UI. Upcoming commits will replace that domain model with the Level 3 architecture:
 
-Vote Transaction: [Stellar Expert Testnet Transaction](https://stellar.expert/explorer/testnet/tx/0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223)
+- Governance contract for proposals, voting, results, closing proposals, and governance events.
+- Reputation contract for participation points and wallet levels.
+- Mandatory inter-contract call from Governance to Reputation when a vote is recorded.
+- Mobile responsive governance dashboard with wallet flow, proposal list/detail, transaction status, explorer links, user reputation, and activity feed.
+- Contract and frontend tests.
+- GitHub Actions CI/CD workflow.
+- Deployment workflow documentation for Stellar Testnet.
 
-Init Transaction: [Stellar Expert Testnet Transaction](https://stellar.expert/explorer/testnet/tx/b2136c8521b62f3a1da4582fb006a7562edeb3c443594ab255f1d985dd2e2a00)
+## Important Submission Rule
 
-Stellar Live Poll is a Level 2 Stellar dApp submission project. It is a single-question live poll where a user connects a Stellar wallet, votes once, writes that vote to a Soroban smart contract on testnet, reads poll state back from RPC, and sees transaction status plus synced activity.
-
-## Features
-
-- Next.js App Router dashboard with TypeScript and Tailwind CSS.
-- StellarWalletsKit multi-wallet modal with Freighter and other default supported wallet modules.
-- Wallet connected state, disconnect, short public key display, and copy address action.
-- Soroban contract read helpers for `get_question`, `get_options`, `get_results`, and `has_voted`.
-- Soroban contract write helper for `vote(voter, option_id)`.
-- Transaction status states: `idle`, `preparing`, `awaiting_signature`, `pending`, `success`, and `failed`.
-- Testnet Stellar Expert transaction link after a successful submission hash is returned.
-- Activity feed populated from real submitted vote hashes and RPC event polling when a contract ID is configured.
-- Error handling for wallet not found, user rejection, insufficient testnet XLM, wrong network, RPC unavailable, invalid contract address, and contract failures.
+Do not fake contract addresses, transaction hashes, explorer links, CI results, or demo video links. Deployment fields stay blank until the contracts are actually deployed and verified on Stellar Testnet.
 
 ## Tech Stack
 
-- Next.js 16 App Router
-- React 19
+- Next.js App Router
+- React
 - TypeScript
-- Tailwind CSS v4
+- Tailwind CSS
 - StellarWalletsKit
-- `@stellar/stellar-sdk` RPC client
-- Soroban Rust smart contract
+- `@stellar/stellar-sdk`
+- Soroban Rust smart contracts
+- Vitest
 - Stellar Testnet
-- Vercel-compatible frontend
 
 ## Run Locally
 
@@ -53,165 +47,98 @@ Open `http://localhost:3000`.
 ```bash
 NEXT_PUBLIC_STELLAR_NETWORK=testnet
 NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
-NEXT_PUBLIC_CONTRACT_ID=CBYUYRYPOKU5PMS4A2XC4WCUI6S3ZE3RTRZPSSGGJWKDIN2BPWXVIFY3
+NEXT_PUBLIC_CONTRACT_ID=
+NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=
+NEXT_PUBLIC_REPUTATION_CONTRACT_ID=
 ```
 
-Do not commit `.env` or secret keys. `.env.example` is safe to commit.
+`NEXT_PUBLIC_CONTRACT_ID` is kept temporarily for the Level 2 baseline code. The Level 3 frontend will move to explicit governance and reputation contract IDs.
 
-## Contract
+Do not commit `.env.local`, secret keys, seed phrases, or deployer private material. `.env.example` is safe to commit.
 
-Contract source lives in `contracts/poll`.
-
-Functions:
-
-- `init(question, options)`
-- `vote(voter, option_id)`
-- `get_question()`
-- `get_options()`
-- `get_results()`
-- `has_voted(voter)`
-
-Behavior:
-
-- Stores one poll question and option list.
-- Allows each wallet to vote once.
-- Rejects invalid option IDs.
-- Increments the chosen option count.
-- Publishes a `vote` event with voter and option ID data.
-
-## Build Contract
-
-```bash
-cd contracts/poll
-stellar contract build
-```
-
-Current build output:
+## Planned Contract Architecture
 
 ```text
-Wasm File: target/wasm32v1-none/release/stellar_live_poll_contract.wasm
-Wasm Hash: 103661b529a0fa62a6b3c2d23fd65949610f55745bd27874d19b3e31a9ca65d3
+contracts/
+  governance/
+    src/lib.rs
+  reputation/
+    src/lib.rs
 ```
 
-## Deploy Contract To Testnet
+Governance contract target API:
 
-```bash
-stellar keys generate livepoll-deployer --network testnet --fund
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/stellar_live_poll_contract.wasm \
-  --source-account livepoll-deployer \
-  --network testnet \
-  --alias stellar_live_poll
-```
+- `initialize(admin, reputation_contract)`
+- `create_proposal(creator, title, description, options, deadline)`
+- `get_proposal(proposal_id)`
+- `list_proposals(start, limit)`
+- `vote(voter, proposal_id, option_index)`
+- `get_results(proposal_id)`
+- `has_voted(proposal_id, voter)`
+- `close_proposal(caller, proposal_id)`
 
-Deployment details:
+Governance events:
 
-- Deployer public key: `GBJRWC7YIOVP6YY5UTMFQB2KZJTZTPHAGBIH7RHJKAAEDZFARL4T5FZC`
-- WASM upload transaction: [`e731fab60c4f212e288bd00bc011f65ddac0f079d0b9678a6c9303b01fbc7e99`](https://stellar.expert/explorer/testnet/tx/e731fab60c4f212e288bd00bc011f65ddac0f079d0b9678a6c9303b01fbc7e99)
-- Contract deploy transaction: [`5f5e3b3057f18b97c0d86617ab48df93a5738b8c5e5a6fa2c74842f902147c94`](https://stellar.expert/explorer/testnet/tx/5f5e3b3057f18b97c0d86617ab48df93a5738b8c5e5a6fa2c74842f902147c94)
-- Contract ID: `CBYUYRYPOKU5PMS4A2XC4WCUI6S3ZE3RTRZPSSGGJWKDIN2BPWXVIFY3`
+- `proposal_created`
+- `vote_cast`
+- `proposal_closed`
 
-Initialize after deploy:
+Reputation contract target API:
 
-```bash
-stellar contract invoke \
-  --id stellar_live_poll \
-  --source-account livepoll-deployer \
-  --network testnet \
-  --send yes \
-  -- \
-  init \
-  --question '"Which Stellar feature should we explore next?"' \
-  --options '["Smart Contracts","Payments","Wallet UX"]'
-```
+- `initialize(admin, governance_contract)`
+- `award_point(voter)`
+- `get_points(wallet)`
+- `get_level(wallet)`
 
-Set the deployed contract ID in `NEXT_PUBLIC_CONTRACT_ID`.
+Reputation events:
 
-The deployed poll was initialized with:
+- `reputation_awarded`
 
-- Question: `Which Stellar feature should we explore next?`
-- Options: `Smart Contracts`, `Payments`, `Wallet UX`
-- Init transaction: [`b2136c8521b62f3a1da4582fb006a7562edeb3c443594ab255f1d985dd2e2a00`](https://stellar.expert/explorer/testnet/tx/b2136c8521b62f3a1da4582fb006a7562edeb3c443594ab255f1d985dd2e2a00)
-- First vote transaction: [`0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223`](https://stellar.expert/explorer/testnet/tx/0293b6348186a3d12b975402977673a6861b30a03cce8edac62f3c2a0d363223)
+## Deployment Status
 
-## Frontend Contract Calls
+Deployment has not happened yet for Level 3.
 
-Reads:
-
-- `get_question`
-- `get_options`
-- `get_results`
-- `has_voted`
-
-Write:
-
-- `vote(voter, option_id)`
-
-The frontend builds a Soroban transaction, prepares it through Stellar RPC, asks StellarWalletsKit to sign the XDR, submits through RPC, polls transaction status, refreshes poll state, and adds the confirmed transaction hash to the activity feed.
-
-## Wallet Support
-
-The app initializes StellarWalletsKit with `defaultModules()` on testnet. The modal can show Freighter, Albedo, Fordefi, Rabet, xBull, Lobstr, Hana, Klever, OneKey, Bitget, and Cactus Link depending on platform availability and wallet support.
-
-## Error Handling
-
-- Wallet not found: `Wallet not found. Please install or enable a supported Stellar wallet.`
-- User rejected: `Request rejected by user.`
-- Insufficient balance: `Insufficient testnet XLM. Please fund your wallet on Stellar Testnet.`
-- Wrong network warning for non-testnet wallet state.
-- Contract call, RPC, and invalid contract address errors are displayed in the dashboard banner and transaction status card.
-
-## Transaction Status
-
-The transaction card displays current status, the last successful transaction hash, Stellar Expert link, and error message. Write flow status moves through preparing, awaiting signature, pending, success, or failed. Contract state refreshes do not clear the last successful vote transaction; disconnecting or switching wallets resets that browser-session transaction state.
-
-## Event And Live Sync
-
-When `NEXT_PUBLIC_CONTRACT_ID` is configured, the frontend polls Stellar RPC every 10 seconds for fresh poll state and contract vote events via `getEvents`. After a vote submission, the returned real transaction hash is immediately added to the activity feed and state is refreshed from RPC. If no contract ID is configured, the UI shows the poll shell but disables voting instead of faking contract activity.
-
-## Screenshots
-
-Final submission screenshots are captured in `screenshots/`:
-
-- `screenshots/wallet-connected.png`
-- `screenshots/poll-loaded.png`
-- `screenshots/vote-ready.png`
-- `screenshots/vote-success.png`
-- `screenshots/results-updated.png`
-- `screenshots/transaction-hash.png`
-
-`screenshots/vote-success.png` must show successful transaction state after a real vote.
-`screenshots/transaction-hash.png` must show the transaction hash and explorer link.
-
-Additional flow screenshots:
-
-- `screenshots/wallet-select-modal.png`
-- `screenshots/vote-pending.png`
+- Governance contract ID: pending
+- Reputation contract ID: pending
+- Governance deploy transaction: pending
+- Reputation deploy transaction: pending
+- Initialization transactions: pending
+- Demo URL: pending
+- Demo video: pending
 
 ## Submission Checklist
 
-- [x] Clean Level 2 project created.
-- [x] Next.js App Router frontend.
-- [x] StellarWalletsKit multi-wallet modal integration.
-- [x] Freighter support via default wallet modules.
-- [x] Wallet connect, disconnect, short address, and copy address UI.
-- [x] Soroban Rust poll contract.
-- [x] Contract read/write helper functions in frontend.
-- [x] Transaction status UI.
-- [x] Activity feed and live sync polling.
-- [x] Error handling for required wallet and transaction cases.
-- [x] `.env.example` included and `.env` ignored.
-- [x] Contract deployed to Stellar Testnet.
-- [x] Contract address added above.
-- [x] Verifiable contract call transaction hash added above.
-- [x] Vercel live demo URL added above.
-- [x] Screenshots captured and added.
+- [x] Level 3 repository initialized from Level 2 baseline.
+- [ ] Project renamed to Stellar Governance Hub across UI and docs.
+- [ ] Governance contract implemented.
+- [ ] Reputation contract implemented.
+- [ ] Inter-contract vote reward flow implemented.
+- [ ] Contract events implemented.
+- [ ] Contract tests added.
+- [ ] Frontend refactored from poll to governance proposals.
+- [ ] Wallet vote transaction flow updated.
+- [ ] Reputation and activity feed UI added.
+- [ ] Frontend tests added.
+- [ ] GitHub Actions CI/CD added.
+- [ ] Stellar Testnet deployment workflow documented.
+- [ ] Contracts deployed to Stellar Testnet.
+- [ ] README updated with real contract IDs and transaction hashes.
+- [ ] Screenshots and demo video section prepared.
 
 ## Commit Plan
 
-Recommended meaningful commits:
-
-1. Initialize Stellar Live Poll frontend with multi-wallet UI
-2. Add Soroban poll contract and deployment configuration
-3. Connect frontend contract read/write calls with transaction status
-4. Add activity feed, README, screenshots, and submission checklist
+1. Initialize Level 3 project from Level 2 baseline.
+2. Rename project metadata and remove Level 2 deployment claims.
+3. Add governance contract proposal model.
+4. Add reputation contract.
+5. Add inter-contract vote reward flow.
+6. Add contract events and tests.
+7. Refactor frontend architecture for proposals.
+8. Add wallet vote transaction flow.
+9. Add reputation and activity feed UI.
+10. Add frontend tests.
+11. Add CI/CD GitHub Actions workflow.
+12. Add deployment workflow docs.
+13. Deploy contracts to Stellar Testnet.
+14. Update README with real contract IDs and hashes.
+15. Add screenshots and demo video section.
