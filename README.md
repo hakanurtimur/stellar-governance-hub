@@ -106,6 +106,8 @@ Deployment has not happened yet for Level 3.
 - Demo URL: pending
 - Demo video: pending
 
+See [docs/deployment.md](docs/deployment.md) for the deployment workflow and verification checklist.
+
 ## Submission Checklist
 
 - [x] Level 3 repository initialized from Level 2 baseline.
