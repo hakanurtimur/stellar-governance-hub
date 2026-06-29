@@ -56,7 +56,7 @@ export function PollCard({
 
       {!poll.configured ? (
         <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          Add NEXT_PUBLIC_CONTRACT_ID to enable live testnet read/write calls.
+          Add the deployed governance contract ID to enable live testnet read/write calls.
         </p>
       ) : null}
 

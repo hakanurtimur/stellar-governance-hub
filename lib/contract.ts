@@ -42,8 +42,8 @@ export type VoteResult = {
   activity: VoteActivity;
 };
 
-const FALLBACK_QUESTION = "Which Stellar developer experience matters most for Level 2?";
-const FALLBACK_OPTIONS = ["Multi-wallet UX", "On-chain poll state", "Live activity feed"];
+const FALLBACK_QUESTION = "Which governance proposal should the community prioritize?";
+const FALLBACK_OPTIONS = ["Protocol upgrades", "Public goods funding", "Ecosystem tooling"];
 
 function isLedgerRangeError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -52,7 +52,9 @@ function isLedgerRangeError(error: unknown): boolean {
 
 function requireContractId(): string {
   if (!CONTRACT_ID) {
-    throw new Error("Invalid contract address. Set NEXT_PUBLIC_CONTRACT_ID first.");
+    throw new Error(
+      "Invalid contract address. Set NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID after deployment.",
+    );
   }
 
   return CONTRACT_ID;

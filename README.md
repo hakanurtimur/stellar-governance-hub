@@ -1,72 +1,60 @@
 # Stellar Governance Hub
 
-Stellar Governance Hub is the Level 3 evolution of the Level 2 Stellar Live Poll project. It will become a production-style Stellar Testnet governance dApp with proposal management, on-chain voting, inter-contract reputation rewards, live activity updates, CI/CD, tests, deployment documentation, and demo-ready assets.
+## Project Overview
 
-## Current Status
+Stellar Governance Hub is a Level 3 Stellar Testnet dApp project. It is being evolved from a Level 2 baseline into a production-style governance dashboard where users connect a wallet, view governance proposals, vote on-chain, see transaction/activity updates, and earn reputation through a second smart contract.
 
-This repository has been initialized from the working Level 2 baseline in a separate Git history. The Level 2 review repository is intentionally left untouched.
+The previous Level 2 project is only a baseline reference. Its deployed contract ID, init transaction, vote transaction, demo link, and screenshots are not Level 3 submission artifacts and are intentionally not listed here as active deployment evidence.
 
-The current baseline still contains the original single-poll contract and UI. Upcoming commits will replace that domain model with the Level 3 architecture:
+Current Level 3 public deployment fields:
 
-- Governance contract for proposals, voting, results, closing proposals, and governance events.
-- Reputation contract for participation points and wallet levels.
-- Mandatory inter-contract call from Governance to Reputation when a vote is recorded.
-- Mobile responsive governance dashboard with wallet flow, proposal list/detail, transaction status, explorer links, user reputation, and activity feed.
-- Contract and frontend tests.
-- GitHub Actions CI/CD workflow.
-- Deployment workflow documentation for Stellar Testnet.
+- Governance Contract ID: TODO
+- Reputation Contract ID: TODO
+- Governance interaction tx hash: TODO
+- Reputation interaction tx hash: TODO
+- Live Demo: TODO
+- Demo Video: TODO
 
-## Important Submission Rule
+## Level 3 Requirements Mapping
 
-Do not fake contract addresses, transaction hashes, explorer links, CI results, or demo video links. Deployment fields stay blank until the contracts are actually deployed and verified on Stellar Testnet.
+- Advanced smart contract development: Governance and Reputation contracts.
+- Inter-contract communication: Governance vote flow calls Reputation to award participation points.
+- Event streaming / real-time updates: frontend activity feed will poll contract events and refreshed proposal state.
+- CI/CD pipeline setup: GitHub Actions will run frontend and contract checks.
+- Smart contract deployment workflow: documented Stellar Testnet build/deploy/initialize flow.
+- Mobile responsive frontend: dashboard layout targets desktop and mobile.
+- Error handling and loading states: wallet, RPC, transaction, empty, and configured/unconfigured states.
+- Tests for contracts and frontend: contract unit tests plus Vitest frontend/unit coverage.
+- Production-ready architecture: separated contracts, frontend components, helpers, docs, and CI.
+- Complete documentation: README plus deployment workflow docs.
+- Demo presentation/video readiness: screenshots and demo video sections remain TODO until real artifacts exist.
 
-## Tech Stack
-
-- Next.js App Router
-- React
-- TypeScript
-- Tailwind CSS
-- StellarWalletsKit
-- `@stellar/stellar-sdk`
-- Soroban Rust smart contracts
-- Vitest
-- Stellar Testnet
-
-## Run Locally
-
-```bash
-pnpm install --ignore-scripts
-cp .env.example .env.local
-pnpm dev
-```
-
-Open `http://localhost:3000`.
-
-## Environment Variables
-
-```bash
-NEXT_PUBLIC_STELLAR_NETWORK=testnet
-NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
-NEXT_PUBLIC_CONTRACT_ID=
-NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=
-NEXT_PUBLIC_REPUTATION_CONTRACT_ID=
-```
-
-`NEXT_PUBLIC_CONTRACT_ID` is kept temporarily for the Level 2 baseline code. The Level 3 frontend will move to explicit governance and reputation contract IDs.
-
-Do not commit `.env.local`, secret keys, seed phrases, or deployer private material. `.env.example` is safe to commit.
-
-## Planned Contract Architecture
+## Architecture
 
 ```text
-contracts/
-  governance/
-    src/lib.rs
-  reputation/
-    src/lib.rs
+Stellar Governance Hub
+  Frontend dashboard
+    Wallet connection
+    Proposal list/detail UI
+    Vote transaction flow
+    Reputation display
+    Activity feed
+
+  Smart contracts
+    Governance Contract
+    Reputation Contract
+
+  Stellar Testnet
+    RPC reads
+    Signed Soroban transactions
+    Contract events
 ```
 
-Governance contract target API:
+## Smart Contracts
+
+### Governance Contract
+
+Target responsibilities:
 
 - `initialize(admin, reputation_contract)`
 - `create_proposal(creator, title, description, options, deadline)`
@@ -76,71 +64,180 @@ Governance contract target API:
 - `get_results(proposal_id)`
 - `has_voted(proposal_id, voter)`
 - `close_proposal(caller, proposal_id)`
+- emit `proposal_created`
+- emit `vote_cast`
+- emit `proposal_closed`
 
-Governance events:
+### Reputation Contract
 
-- `proposal_created`
-- `vote_cast`
-- `proposal_closed`
-
-Reputation contract target API:
+Target responsibilities:
 
 - `initialize(admin, governance_contract)`
 - `award_point(voter)`
 - `get_points(wallet)`
 - `get_level(wallet)`
+- track participation points per wallet
+- emit `reputation_awarded`
 
-Reputation events:
+### Inter-contract Communication
 
-- `reputation_awarded`
+The required Level 3 flow:
 
-## Deployment Status
+```text
+User votes
+→ Governance Contract validates and records the vote
+→ Governance Contract calls Reputation Contract
+→ Reputation Contract awards 1 participation point
+→ frontend refreshes proposal results, reputation, and activity feed
+```
 
-Deployment has not happened yet for Level 3.
+## Frontend Features
 
-- Governance contract ID: pending
-- Reputation contract ID: pending
-- Governance deploy transaction: pending
-- Reputation deploy transaction: pending
-- Initialization transactions: pending
-- Demo URL: pending
-- Demo video: pending
+- Wallet connect, disconnect, and switch wallet.
+- Stellar Testnet badge.
+- Governance Contract ID display.
+- Reputation Contract ID display.
+- Proposal-oriented dashboard shell.
+- Vote options and vote button.
+- Transaction status card.
+- Transaction hash display after real successful submissions.
+- Stellar Expert explorer links after real hashes exist.
+- User reputation points and level.
+- Live activity feed.
+- Loading, error, unconfigured, already-voted, and submitted states.
+- Mobile responsive layout.
 
-See [docs/deployment.md](docs/deployment.md) for the deployment workflow and verification checklist.
+## Event Streaming / Activity Feed Plan
+
+The first production-ready approach will use polling:
+
+- poll proposal state every few seconds;
+- poll contract events where Stellar RPC event history is available;
+- immediately add locally submitted real transaction hashes after vote submission;
+- deduplicate activity items by event ID or transaction hash;
+- never create fake activity, hashes, or explorer links.
+
+If direct event streaming becomes reliable in the target environment, the polling layer can be replaced behind the same activity feed interface.
+
+## CI/CD Plan
+
+GitHub Actions should run on push and pull request:
+
+- `npm test`
+- `npm run lint`
+- `npm run build`
+- `cargo test --locked` for Governance
+- `cargo test --locked` for Reputation
+- `stellar contract build` when Stellar CLI is available in CI
+
+## Testing Plan
+
+Contract tests:
+
+- proposal creation;
+- proposal listing and result initialization;
+- vote recording;
+- duplicate vote prevention;
+- close proposal behavior;
+- inter-contract reputation award.
+
+Frontend tests:
+
+- disconnected wallet UI;
+- proposal rendering;
+- transaction success state;
+- activity feed after vote;
+- contract ID display;
+- formatting and transaction state helpers.
+
+## Environment Variables
+
+Primary Level 3 variables:
+
+```bash
+NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID=
+NEXT_PUBLIC_REPUTATION_CONTRACT_ID=
+NEXT_PUBLIC_STELLAR_NETWORK=testnet
+NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+```
+
+Temporary backward compatibility while the baseline frontend helpers are migrated:
+
+```bash
+NEXT_PUBLIC_CONTRACT_ID=
+```
+
+Do not commit `.env.local`, private keys, seed phrases, or deployer secrets.
+
+## Local Development
+
+```bash
+pnpm install
+cp .env.example .env.local
+pnpm dev
+```
+
+Open `http://localhost:3000`.
+
+Useful checks:
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+## Contract Build / Deploy Workflow
+
+See [docs/deployment.md](docs/deployment.md) for the full Stellar Testnet deployment workflow.
+
+Short version:
+
+```bash
+cd contracts/reputation
+stellar contract build
+
+cd ../governance
+stellar contract build
+```
+
+Deployment order:
+
+1. Deploy Reputation Contract.
+2. Deploy Governance Contract.
+3. Initialize Reputation with Governance Contract ID.
+4. Initialize Governance with Reputation Contract ID.
+5. Create initial proposals.
+6. Update README only with real public IDs and transaction hashes.
+
+## Screenshots
+
+Level 3 screenshots: TODO
+
+Do not reuse Level 2 screenshots as Level 3 evidence. New screenshots should be captured after the governance dashboard and real Testnet flows are ready.
+
+## Demo Video
+
+Demo video: TODO
+
+The demo should show wallet connection, proposal voting, transaction status, activity feed update, and reputation point update using real Testnet data.
 
 ## Submission Checklist
 
 - [x] Level 3 repository initialized from Level 2 baseline.
-- [ ] Project renamed to Stellar Governance Hub across UI and docs.
-- [ ] Governance contract implemented.
-- [ ] Reputation contract implemented.
-- [ ] Inter-contract vote reward flow implemented.
-- [ ] Contract events implemented.
-- [ ] Contract tests added.
-- [ ] Frontend refactored from poll to governance proposals.
-- [ ] Wallet vote transaction flow updated.
-- [ ] Reputation and activity feed UI added.
-- [ ] Frontend tests added.
-- [ ] GitHub Actions CI/CD added.
-- [ ] Stellar Testnet deployment workflow documented.
+- [x] Project renamed to Stellar Governance Hub.
+- [x] Level 2 deployment claims removed from README.
+- [x] Level 3 environment variable names added.
+- [ ] Governance contract finalized.
+- [ ] Reputation contract finalized.
+- [ ] Inter-contract communication finalized.
+- [ ] Frontend proposal list/detail finalized.
+- [ ] Wallet vote flow finalized against Governance Contract.
+- [ ] Reputation UI finalized against Reputation Contract.
+- [ ] Activity feed polling finalized.
+- [ ] CI/CD finalized.
+- [ ] Contract deployment workflow verified.
 - [ ] Contracts deployed to Stellar Testnet.
-- [ ] README updated with real contract IDs and transaction hashes.
-- [ ] Screenshots and demo video section prepared.
-
-## Commit Plan
-
-1. Initialize Level 3 project from Level 2 baseline.
-2. Rename project metadata and remove Level 2 deployment claims.
-3. Add governance contract proposal model.
-4. Add reputation contract.
-5. Add inter-contract vote reward flow.
-6. Add contract events and tests.
-7. Refactor frontend architecture for proposals.
-8. Add wallet vote transaction flow.
-9. Add reputation and activity feed UI.
-10. Add frontend tests.
-11. Add CI/CD GitHub Actions workflow.
-12. Add deployment workflow docs.
-13. Deploy contracts to Stellar Testnet.
-14. Update README with real contract IDs and hashes.
-15. Add screenshots and demo video section.
+- [ ] README updated with real Level 3 contract IDs and transaction hashes.
+- [ ] Level 3 screenshots captured.
+- [ ] Demo video recorded.

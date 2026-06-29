@@ -118,15 +118,15 @@ stellar contract invoke \
 
 Fill these only after real deployment:
 
-- Reputation contract ID: pending
-- Governance contract ID: pending
-- Reputation deploy transaction: pending
-- Governance deploy transaction: pending
-- Reputation initialization transaction: pending
-- Governance initialization transaction: pending
-- Initial proposal transaction: pending
-- Frontend deployment URL: pending
-- Demo video URL: pending
+- Reputation contract ID: TODO
+- Governance contract ID: TODO
+- Reputation deploy transaction: TODO
+- Governance deploy transaction: TODO
+- Reputation initialization transaction: TODO
+- Governance initialization transaction: TODO
+- Initial proposal transaction: TODO
+- Frontend deployment URL: TODO
+- Demo video URL: TODO
 
 ## Verification Checklist
 
