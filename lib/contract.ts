@@ -8,7 +8,7 @@ import {
   scValToNative,
 } from "@stellar/stellar-sdk";
 
-import { CONTRACT_ID, NETWORK_PASSPHRASE, getRpcServer, getLatestLedger } from "./stellar";
+import { GOVERNANCE_CONTRACT_ID, NETWORK_PASSPHRASE, getRpcServer, getLatestLedger } from "./stellar";
 import { normalizeTransactionStatus } from "./format";
 
 export type PollOption = {
@@ -51,13 +51,13 @@ function isLedgerRangeError(error: unknown): boolean {
 }
 
 function requireContractId(): string {
-  if (!CONTRACT_ID) {
+  if (!GOVERNANCE_CONTRACT_ID) {
     throw new Error(
       "Invalid contract address. Set NEXT_PUBLIC_GOVERNANCE_CONTRACT_ID after deployment.",
     );
   }
 
-  return CONTRACT_ID;
+  return GOVERNANCE_CONTRACT_ID;
 }
 
 function getContract(): Contract {
@@ -93,7 +93,7 @@ async function simulateCall<T>(method: string, ...args: Parameters<Contract["cal
 }
 
 export async function fetchPollState(voter?: string): Promise<PollState> {
-  if (!CONTRACT_ID) {
+  if (!GOVERNANCE_CONTRACT_ID) {
     const options = FALLBACK_OPTIONS.map((label, index) => ({
       id: index,
       label,
@@ -135,6 +135,7 @@ export async function fetchPollState(voter?: string): Promise<PollState> {
 
 export async function submitVote(
   voter: string,
+  proposalId: number,
   optionId: number,
   signXdr: (xdr: string) => Promise<string>,
   options: PollOption[],
@@ -148,6 +149,7 @@ export async function submitVote(
       getContract().call(
         "vote",
         new Address(voter).toScVal(),
+        nativeToScVal(proposalId, { type: "u32" }),
         nativeToScVal(optionId, { type: "u32" }),
       ),
     )
@@ -189,7 +191,7 @@ export async function submitVote(
 }
 
 export async function fetchVoteEvents(fromLedger: number, options: PollOption[]): Promise<VoteActivity[]> {
-  if (!CONTRACT_ID || fromLedger < 1) {
+  if (!GOVERNANCE_CONTRACT_ID || fromLedger < 1) {
     return [];
   }
 
@@ -200,7 +202,7 @@ export async function fetchVoteEvents(fromLedger: number, options: PollOption[])
       filters: [
         {
           type: "contract",
-          contractIds: [CONTRACT_ID],
+          contractIds: [GOVERNANCE_CONTRACT_ID],
           topics: [[nativeToScVal("vote").toXDR("base64")]],
         },
       ],

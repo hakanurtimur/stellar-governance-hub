@@ -104,19 +104,17 @@ If the Reputation call fails, the vote transaction fails as well, keeping propos
 
 ## Frontend Features
 
-- Wallet connect, disconnect, and switch wallet.
-- Stellar Testnet badge.
-- Governance Contract ID display.
-- Reputation Contract ID display.
-- Proposal-oriented dashboard shell.
-- Vote options and vote button.
-- Transaction status card.
-- Transaction hash display after real successful submissions.
-- Stellar Expert explorer links after real hashes exist.
-- User reputation points and level.
-- Live activity feed.
-- Loading, error, unconfigured, already-voted, and submitted states.
-- Mobile responsive layout.
+- Governance dashboard implemented with header badges, wallet panel, proposal list/detail, vote panel, reputation card, transaction status, and live activity feed UI.
+- Wallet connect, disconnect, and switch wallet states implemented for Stellar Testnet UX.
+- Governance Contract and Reputation Contract info cards implemented with env-backed IDs, copy controls, and explorer links only when configured.
+- Proposal list/detail UI implemented with status, deadlines, leading option, vote counts, percentages, already-voted, closed/ended, empty, and preview states.
+- Reputation card implemented with points and `newcomer` / `participant` / `contributor` / `governor` levels.
+- Activity feed UI implemented for local successful vote activity and future contract event polling.
+- Transaction status UI implemented with idle, awaiting wallet, submitting, success, and error states.
+- Transaction hash display is retained after real successful submissions.
+- Loading, error, missing-env, unconfigured, already-voted, and submitted states are represented.
+- Mobile responsive layout implemented with single-column cards, wrapping actions, shortened IDs, and non-overflowing hashes.
+- Contract deployment is still TODO; no fake contract IDs, transaction hashes, explorer links, screenshots, or demo video are listed.
 
 ## Event Streaming / Activity Feed Plan
 
@@ -242,10 +240,10 @@ The demo should show wallet connection, proposal voting, transaction status, act
 - [ ] Governance contract finalized.
 - [ ] Reputation contract finalized.
 - [x] Inter-contract communication finalized.
-- [ ] Frontend proposal list/detail finalized.
-- [ ] Wallet vote flow finalized against Governance Contract.
-- [ ] Reputation UI finalized against Reputation Contract.
-- [ ] Activity feed polling finalized.
+- [x] Frontend proposal list/detail finalized.
+- [ ] Wallet vote flow finalized against deployed Governance Contract.
+- [x] Reputation UI finalized.
+- [x] Activity feed UI finalized.
 - [ ] CI/CD finalized.
 - [ ] Contract deployment workflow verified.
 - [ ] Contracts deployed to Stellar Testnet.

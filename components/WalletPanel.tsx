@@ -2,7 +2,7 @@
 
 import { Copy, LogOut, Repeat2, ShieldCheck, Wallet } from "lucide-react";
 
-import { shortenAddress } from "@/lib/format";
+import { shortenAddress } from "../lib/format";
 
 type Props = {
   publicKey?: string;
@@ -83,8 +83,7 @@ export function WalletPanel({ publicKey, onConnect, onDisconnect, onSwitchWallet
       ) : (
         <div className="mt-5 space-y-4">
           <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
-            Connect a supported Stellar wallet to sign one real Soroban vote transaction on
-            Testnet.
+            Connect a Stellar wallet to vote on proposals.
           </p>
           <button
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"

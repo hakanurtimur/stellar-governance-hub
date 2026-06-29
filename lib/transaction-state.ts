@@ -2,6 +2,7 @@ import { buildExplorerUrl, type TransactionStatus } from "./format";
 
 export type LastTransaction = {
   hash: string;
+  proposalTitle?: string;
   optionLabel: string;
   optionIndex: number;
   explorerUrl: string;
