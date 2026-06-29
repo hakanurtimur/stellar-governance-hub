@@ -70,13 +70,17 @@ Target responsibilities:
 
 ### Reputation Contract
 
-Target responsibilities:
+Foundation implemented in `contracts/reputation`:
 
 - `initialize(admin, governance_contract)`
-- `award_point(voter)`
+- `award_point(caller, voter)`
 - `get_points(wallet)`
 - `get_level(wallet)`
+- `get_governance_contract()`
 - track participation points per wallet
+- enforce that only the initialized governance contract can award points
+- levels: `newcomer`, `participant`, `contributor`, `governor`
+- emit `reputation_initialized`
 - emit `reputation_awarded`
 
 ### Inter-contract Communication
